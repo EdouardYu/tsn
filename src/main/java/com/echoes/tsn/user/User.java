@@ -1,7 +1,9 @@
 package com.echoes.tsn.user;
 
 import com.echoes.tsn.util.Password;
+import org.bson.Document;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Bean class that represent an user of the social network
@@ -134,5 +136,35 @@ public class User {
                 ", nationality='" + nationality + '\'' +
                 ", isBlocked=" + isBlocked +
                 '}';
+    }
+
+    public static User fromDocument (Document document) {
+        return new User(
+                document.getString("username"),
+                document.getString("email"),
+                new Password(
+                        document.getEmbedded(List.of("password", "sha256"), String.class),
+                        document.getEmbedded(List.of("password", "salt"), String.class)
+                ),
+                document.getString("name"),
+                document.getString("surname"),
+                document.getString("gender"),
+                document.getDate("date-of-birth"),
+                document.getString("nationality"),
+                document.getBoolean("isBlocked")
+        );
+    }
+
+    public Document toDocument () {
+        return new Document()
+                .append("username", username)
+                .append("email", email)
+                .append("password", password.toDocument())
+                .append("name", name)
+                .append("surname", surname)
+                .append("gender", gender)
+                .append("date-of-birth", dateOfBirth)
+                .append("nationality", nationality)
+                .append("isBlocked", isBlocked);
     }
 }
