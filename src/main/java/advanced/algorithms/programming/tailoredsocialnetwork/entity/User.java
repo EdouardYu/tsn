@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Data
 @Builder
@@ -40,6 +41,8 @@ public class User implements UserDetails {
     private Nationality nationality = Nationality.UNSPECIFIED;
     private String picture;
     private String bio;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Interest> interests;
     @Enumerated(EnumType.STRING)
     private Visibility visibility = Visibility.FRIENDS_ONLY;
     @Column(name = "created_at")
