@@ -1,9 +1,6 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.entity;
 
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Gender;
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Nationality;
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Role;
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Visibility;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
