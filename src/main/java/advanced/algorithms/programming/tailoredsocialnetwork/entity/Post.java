@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -34,12 +35,12 @@ public class Post {
     @JoinColumn(name = "parent_id")
     private Post parent;
     @OneToMany(fetch = FetchType.LAZY)
-    private List<Post> replies;
+    private List<Post> comments = new ArrayList<>();
     @OneToMany(fetch = FetchType.LAZY)
-    private List<View> views;
+    private List<View> views = new ArrayList<>();;
     @OneToMany(fetch = FetchType.LAZY)
-    private List<Like> likes;
+    private List<Like> likes = new ArrayList<>();;
     @OneToMany(fetch = FetchType.LAZY)
-    private List<Share> shares;
+    private List<Share> shares = new ArrayList<>();;
 }
 
