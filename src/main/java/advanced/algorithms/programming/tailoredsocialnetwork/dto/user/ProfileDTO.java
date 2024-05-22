@@ -5,14 +5,12 @@ import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Nationality;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Role;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Visibility;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.List;
 
 @Builder

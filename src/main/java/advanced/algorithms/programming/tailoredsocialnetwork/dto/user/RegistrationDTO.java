@@ -1,10 +1,9 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.dto.user;
 
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.Interest;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Gender;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.InterestTag;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Nationality;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -48,8 +47,8 @@ public class RegistrationDTO {
     @NotNull(message = "Nationality cannot be null")
     private Nationality nationality;
 
-    @Valid
-    private List<Interest> interests;
+    @NotEmpty(message = "Interests cannot be empty")
+    private List<InterestTag> interests;
 
     @JsonCreator
     public RegistrationDTO(
@@ -60,7 +59,7 @@ public class RegistrationDTO {
         LocalDate birthday,
         Gender gender,
         Nationality nationality,
-        List<Interest> interests
+        List<InterestTag> interests
     ) {
         this.email = email == null ? null : email.toLowerCase();
         this.password = password;

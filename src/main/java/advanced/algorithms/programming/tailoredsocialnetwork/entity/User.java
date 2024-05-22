@@ -15,9 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Data
 @Builder
@@ -29,26 +27,47 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private String email;
+
     private String password;
+
     private String firstname;
+
     private String lastname;
+
     private String username;
+
     private LocalDate birthday;
+
     @Enumerated(EnumType.STRING)
     private Gender gender = Gender.UNSPECIFIED;
+
     @Enumerated(EnumType.STRING)
     private Nationality nationality = Nationality.UNSPECIFIED;
+
     private String picture;
+
     private String bio;
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Interest> interests;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
+    private List<Interest> interests = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
+    private List<Relationship> friends = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    private List<Like> likedPosts = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     private Visibility visibility = Visibility.FRIENDS_ONLY;
+
     @Column(name = "created_at")
     private Instant createdAt = Instant.now();
+
     @Column(name = "is_enabled")
     private boolean enabled = false;
+
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 

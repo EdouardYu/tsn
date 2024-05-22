@@ -1,19 +1,4 @@
 services:
-  db:
-    container_name: postgres
-    image: postgres:16.2
-    restart: always
-    ports:
-      - "5433:5432"
-    environment:
-      POSTGRES_DB: tailored_social_network
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
-    volumes:
-      - "./data:/var/lib/postgresql/data"
-    networks:
-      - "tailored_social_network"
-
   adminer:
     container_name: adminer
     image: adminer:4.8.1

@@ -1,7 +1,7 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.dto.user;
 
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.Interest;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Gender;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.InterestTag;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Nationality;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -63,7 +63,7 @@ public class ProfileModificationDTO {
     private Visibility visibility;
 
     @Valid
-    private List<Interest> interests;
+    private List<InterestTag> interests;
 
     @JsonCreator
     public ProfileModificationDTO(
@@ -78,7 +78,7 @@ public class ProfileModificationDTO {
         String picture,
         String bio,
         Visibility visibility,
-        List<Interest> interests
+        List<InterestTag> interests
     ) {
         this.email = email == null ? null : email.toLowerCase();
         this.password = password;

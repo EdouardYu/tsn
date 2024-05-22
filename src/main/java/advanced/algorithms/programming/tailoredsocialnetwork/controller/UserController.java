@@ -43,7 +43,11 @@ public class UserController {
     }
 
     @ResponseStatus(value = HttpStatus.OK)
-    @PostMapping(path = "signin", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(
+        path = "signin",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public Map<String, String> signIn(@RequestBody AuthenticationDTO authenticationDTO) {
         this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
             authenticationDTO.getUsername(),
@@ -83,22 +87,34 @@ public class UserController {
         this.userService.modifyProfile(id, userDTO);
     }
 
+    //@ResponseStatus(value = HttpStatus.OK)
+    //@DeleteMapping("profiles/{id}")
+    //public void deleteProfile(@PathVariable int id) {
+    //    this.userService.deleteProfile(id);
+    //}
+
     @ResponseStatus(value = HttpStatus.OK)
-    @DeleteMapping("profiles/{id}")
-    public void deleteProfile(@PathVariable int id) {
-        this.userService.deleteProfile(id);
+    @GetMapping(value = "profiles/{followerId}/follow/{followedId}")
+    public void followUser(@PathVariable int followerId, @PathVariable int followedId) {
+        this.userService.followUser(followerId, followedId);
     }
 
     @ResponseStatus(value = HttpStatus.OK)
-    @PostMapping(value = "{followerId}/follow/{followedId}")
-    public void followUser(@PathVariable int followerId, @PathVariable int followedId) {
-        this.userService.followUser(followerId, followedId);
+    @GetMapping(value = "profiles/{followerId}/unfollow/{followedId}")
+    public void unfollowUser(@PathVariable int followerId, @PathVariable int followedId) {
+        this.userService.unfollowUser(followerId, followedId);
     }
 
     @ResponseStatus(value = HttpStatus.OK)
     @GetMapping(path = "profiles", produces = MediaType.APPLICATION_JSON_VALUE)
     public Page<UserDTO> getRecommendedProfiles(@RequestBody List<SearchCriteria> criteria, Pageable pageable) {
         return this.userService.getRecommendedProfiles(criteria, pageable);
+    }
+
+    @ResponseStatus(value = HttpStatus.OK)
+    @GetMapping(path = "profiles/{id}/friends", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Page<UserDTO> getFriends(@PathVariable int id, Pageable pageable) {
+        return this.userService.getFriends(id, pageable);
     }
 }
 
