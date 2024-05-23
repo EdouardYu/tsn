@@ -2,9 +2,8 @@ package advanced.algorithms.programming.tailoredsocialnetwork.domain;
 import java.util.*;
 import java.util.stream.Collectors;
 public class FriendRecommander {
-    class User {
-        int id;
-        Set<Integer> friends;
+
+        Set<User> friends;
         Set<Integer> likedPosts;
         Set<String> interests;
 
@@ -26,7 +25,7 @@ public class FriendRecommander {
         public void addInterest(String interest) {
             interests.add(interest);
         }
-    }
+
 
     class RecommenderSystem {
         private Map<Integer, User> users = new HashMap<>();
@@ -60,13 +59,13 @@ public class FriendRecommander {
                     int score = 0;
 
                     // Amis en commun
-                    score += countMutualFriends(user, otherUser);
+                    score += (countMutualFriends(user, otherUser))*5;
 
                     // Posts likés en commun
                     score += countCommonLikedPosts(user, otherUser);
 
                     // Intérêts en commun
-                    score += countCommonInterests(user, otherUser);
+                    score += (countCommonInterests(user, otherUser))*2;
 
                     scoredUsers.put(otherUser.id, score);
                 }
