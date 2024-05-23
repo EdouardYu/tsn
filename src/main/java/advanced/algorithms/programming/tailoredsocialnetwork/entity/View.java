@@ -21,10 +21,12 @@ public class View {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
     @Id
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;
+
     @Column(name = "viewed_at")
     private Instant viewedAt = Instant.now();
 }

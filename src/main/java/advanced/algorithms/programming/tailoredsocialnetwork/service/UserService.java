@@ -1,14 +1,22 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.service;
 
-import advanced.algorithms.programming.tailoredsocialnetwork.dto.*;
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.User;
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.Validation;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.SearchCriteria;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.mapper.UserMapper;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.user.*;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.*;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.InterestTag;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Role;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Visibility;
+import advanced.algorithms.programming.tailoredsocialnetwork.repository.FollowRepository;
+import advanced.algorithms.programming.tailoredsocialnetwork.repository.InterestRepository;
+import advanced.algorithms.programming.tailoredsocialnetwork.repository.RelationshipRepository;
 import advanced.algorithms.programming.tailoredsocialnetwork.repository.UserRepository;
+import advanced.algorithms.programming.tailoredsocialnetwork.repository.specification.UserSpecification;
 import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,6 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Transactional
@@ -25,12 +35,15 @@ import java.time.Instant;
 @Service
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final InterestRepository interestRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final ValidationService validationService;
+    private final FollowRepository followRepository;
+    private final RelationshipRepository relationshipRepository;
 
     public void signUp(RegistrationDTO userDTO) {
-        this.userRepository.findByEmail(userDTO.getEmail())
-            .orElseThrow(() -> new AlreadyUsedException("Email already used"));
+        if(this.userRepository.existsByEmail(userDTO.getEmail()))
+            throw new AlreadyUsedException("Email already used");
 
         String encryptedPassword = this.passwordEncoder.encode(userDTO.getPassword());
 
@@ -52,6 +65,12 @@ public class UserService implements UserDetailsService {
             .build();
 
         this.userRepository.save(user);
+
+        List<Interest> interests = userDTO.getInterests().stream()
+            .map(tag -> Interest.builder().interest(tag).user(user).build())
+            .toList();
+
+        this.interestRepository.saveAll(interests);
 
         this.validationService.register(user);
     }
@@ -117,33 +136,167 @@ public class UserService implements UserDetailsService {
         this.userRepository.save(user);
     }
 
-    public void modifyProfile(int id, ProfileModificationDTO userDTO) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User dbUser = this.userRepository.findById(id)
+    public ProfileDTO getProfile(int id) {
+        User profile = this.userRepository.findById(id)
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if(user.getId() != dbUser.getId() || !user.getRole().equals(Role.ADMINISTRATOR))
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (!Role.ADMINISTRATOR.equals(user.getRole()) &&
+            user.getId() != profile.getId() &&
+            !Visibility.PUBLIC.equals(profile.getVisibility()) &&
+            !(Visibility.FRIENDS_ONLY.equals(profile.getVisibility()) &&
+                this.relationshipRepository.isFriend(user.getId(), profile.getId())))
             throw new AccessDeniedException("Access denied");
+
+        return ProfileDTO.builder()
+                .email(profile.getEmail())
+                .firstname(profile.getFirstname())
+                .lastname(profile.getLastname())
+                .birthday(profile.getBirthday())
+                .gender(profile.getGender())
+                .nationality(profile.getNationality())
+                .picture(profile.getPicture())
+                .bio(profile.getBio())
+                .interests(profile.getInterests())
+                .visibility(profile.getVisibility())
+                .createdAt(profile.getCreatedAt())
+                .role(profile.getRole())
+                .build();
+    }
+
+    public void modifyProfile(int id, ProfileModificationDTO userDTO) {
+        User user = hasPermission(id);
 
         this.userRepository.findByEmail(userDTO.getEmail())
             .orElseThrow(() -> new AlreadyUsedException("Email already used"));
 
         String encryptedPassword = this.passwordEncoder.encode(userDTO.getPassword());
 
-        dbUser.setEmail(userDTO.getEmail());
-        dbUser.setPassword(encryptedPassword);
-        dbUser.setFirstname(userDTO.getFirstname());
-        dbUser.setLastname(userDTO.getLastname());
-        dbUser.setUsername(userDTO.getUsername());
-        dbUser.setBirthday(userDTO.getBirthday());
-        dbUser.setGender(userDTO.getGender());
-        dbUser.setNationality(userDTO.getNationality());
-        dbUser.setPicture(userDTO.getPicture());
-        dbUser.setBio(userDTO.getBio());
-        dbUser.setVisibility(userDTO.getVisibility());
-        dbUser.setInterests(userDTO.getInterests());
+        user.setEmail(userDTO.getEmail());
+        user.setPassword(encryptedPassword);
+        user.setFirstname(userDTO.getFirstname());
+        user.setLastname(userDTO.getLastname());
+        user.setUsername(userDTO.getUsername());
+        user.setBirthday(userDTO.getBirthday());
+        user.setGender(userDTO.getGender());
+        user.setNationality(userDTO.getNationality());
+        user.setPicture(userDTO.getPicture());
+        user.setBio(userDTO.getBio());
+        user.setVisibility(userDTO.getVisibility());
 
-        this.userRepository.save(dbUser);
+        this.userRepository.save(user);
+
+        this.updateInterests(user, userDTO.getInterests());
+    }
+
+    private void updateInterests(User user, List<InterestTag> newInterestsTag) {
+        List<Interest> currentInterests = user.getInterests();
+
+        currentInterests.removeIf(interest -> !newInterestsTag.contains(interest.getInterest()));
+
+        List<InterestTag> currentInterestsTag = currentInterests.stream()
+            .map(Interest::getInterest)
+            .toList();
+
+        newInterestsTag.stream()
+            .filter(tag -> !currentInterestsTag.contains(tag))
+            .map(tag -> Interest.builder().interest(tag).user(user).build())
+            .forEach(currentInterests::add);
+
+        this.interestRepository.saveAll(currentInterests);  // Sauvegarder les modifications
+    }
+
+    //public void deleteProfile(int id) {
+    //    User user = this.hasPermission(id);
+    //    this.userRepository.deleteById(user.getId());
+    //}
+
+    private User hasPermission(int id) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User dbUser = this.userRepository.findById(id)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if(user.getId() != dbUser.getId() && !Role.ADMINISTRATOR.equals(user.getRole()))
+            throw new AccessDeniedException("Access denied");
+
+        return dbUser;
+    }
+
+    public void followUser(int followerId, int followedId) {
+        User user = hasPermission(followerId);
+
+        User followed = this.userRepository.findById(followedId)
+            .orElseThrow(() -> new UsernameNotFoundException("The user you tried to follow is not found"));
+
+        if(this.followRepository.existsByFollowerIdAndFollowedId(followerId, followedId))
+            throw new AlreadyProcessedException("You already follow this user");
+
+        Instant now = Instant.now();
+
+        Follow follow = Follow.builder()
+            .follower(user)
+            .followed(followed)
+            .followedAt(now)
+            .build();
+
+        this.followRepository.save(follow);
+
+        if(this.followRepository.existsByFollowerIdAndFollowedId(followedId, followerId)) {
+            List<Relationship> relationships = new ArrayList<>();
+
+            relationships.add(Relationship.builder()
+                .user(user)
+                .friend(followed)
+                .startedAt(now)
+                .build());
+
+            relationships.add(Relationship.builder()
+                .user(followed)
+                .friend(user)
+                .startedAt(now)
+                .build());
+
+            this.relationshipRepository.saveAll(relationships);
+        }
+    }
+
+    public void unfollowUser(int followerId, int followedId) {
+        hasPermission(followerId);
+
+        if(!this.userRepository.existsById(followedId))
+            throw new UsernameNotFoundException("The user you tried to unfollow is not found");
+
+        if(!this.followRepository.existsByFollowerIdAndFollowedId(followerId, followedId))
+            throw new AlreadyProcessedException("You never follow this user");
+
+        if(this.followRepository.existsByFollowerIdAndFollowedId(followedId, followerId)) {
+            this.relationshipRepository.deleteByUserIdAndFriendId(followerId, followedId);
+            this.relationshipRepository.deleteByUserIdAndFriendId(followedId, followerId);
+        }
+
+        this.followRepository.deleteByFollowerIdAndFollowedId(followerId, followedId);
+    }
+
+    public Page<UserDTO> getRecommendedProfiles(List<SearchCriteria> criteria, Pageable pageable) {
+        UserSpecification specs = criteria.stream()
+            .map(UserSpecification::new)
+            .reduce((spec1, spec2) -> (UserSpecification) spec1.and(spec2)).orElse(null);
+
+        Page<User> users;
+        if (specs != null)
+            users = this.userRepository.findAll(specs, pageable);
+        else
+            users = this.userRepository.findAll(pageable);
+
+        return users.map(UserMapper::toUserDTO);
+    }
+
+    public Page<UserDTO> getFriends(int id, Pageable pageable) {
+        hasPermission(id);
+
+        return this.relationshipRepository.findByUserId(id, pageable).map(Relationship::getFriend)
+            .map(UserMapper::toUserDTO);
     }
 
     @Override

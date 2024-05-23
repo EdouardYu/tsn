@@ -1,6 +1,7 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.entity;
 
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.id.FollowId;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.id.RelationshipId;
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,16 +16,21 @@ import java.time.Instant;
 @NoArgsConstructor
 @Entity
 @Table(name = "relationship")
-@IdClass(Relationship.class)
+@IdClass(RelationshipId.class)
 public class Relationship {
     @Id
     @ManyToOne
-    @JoinColumn(name = "user1_id")
-    private User user1;
+    @JoinColumn(name = "user_id")
+    private User user;
     @Id
     @ManyToOne
-    @JoinColumn(name = "user2_id")
-    private User user2;
+    @JoinColumn(name = "friend_id")
+    private User friend;
     @Column(name = "started_at")
     private Instant startedAt;
+
+    @JsonValue
+    public User getFriend() {
+        return this.friend;
+    }
 }

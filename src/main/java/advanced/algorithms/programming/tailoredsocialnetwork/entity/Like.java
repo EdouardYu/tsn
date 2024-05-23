@@ -21,10 +21,12 @@ public class Like {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
     @Id
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;
+
     @Column(name = "liked_at")
     private Instant likedAt = Instant.now();
 }

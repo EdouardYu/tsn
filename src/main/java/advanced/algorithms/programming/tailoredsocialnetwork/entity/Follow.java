@@ -19,12 +19,14 @@ import java.time.Instant;
 public class Follow {
     @Id
     @ManyToOne
-    @JoinColumn(name = "follower_id")
+    @JoinColumn(name = "follower_id", insertable = false, updatable = false)
     private User follower;
+
     @Id
     @ManyToOne
-    @JoinColumn(name = "followed_id")
+    @JoinColumn(name = "followed_id", insertable = false, updatable = false)
     private User followed;
+
     @Column(name = "followed_at")
     private Instant followedAt;
 }
