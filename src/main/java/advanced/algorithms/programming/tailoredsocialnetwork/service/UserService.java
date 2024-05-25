@@ -4,9 +4,7 @@ import advanced.algorithms.programming.tailoredsocialnetwork.dto.SearchCriteria;
 import advanced.algorithms.programming.tailoredsocialnetwork.dto.mapper.UserMapper;
 import advanced.algorithms.programming.tailoredsocialnetwork.dto.user.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.*;
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.InterestTag;
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Role;
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Visibility;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.repository.FollowRepository;
 import advanced.algorithms.programming.tailoredsocialnetwork.repository.InterestRepository;
 import advanced.algorithms.programming.tailoredsocialnetwork.repository.RelationshipRepository;
@@ -26,8 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Transactional
@@ -42,27 +39,41 @@ public class UserService implements UserDetailsService {
     private final RelationshipRepository relationshipRepository;
 
     public void signUp(RegistrationDTO userDTO) {
-        if(this.userRepository.existsByEmail(userDTO.getEmail()))
+        if(this.userRepository.existsByEmailAndEnabled(userDTO.getEmail(), true))
             throw new AlreadyUsedException("Email already used");
 
+        Optional<User> dbUser = this.userRepository.findByEmail(userDTO.getEmail());
         String encryptedPassword = this.passwordEncoder.encode(userDTO.getPassword());
 
-        User user = User.builder()
-            .email(userDTO.getEmail())
-            .password(encryptedPassword)
-            .firstname(userDTO.getFirstname())
-            .lastname(userDTO.getLastname())
-            .username(userDTO.getFirstname() + " " + userDTO.getLastname())
-            .birthday(userDTO.getBirthday())
-            .gender(userDTO.getGender())
-            .nationality(userDTO.getNationality())
-            .picture("https://upload.wikimedia.org/wikipedia/commons/4/4b/User-Pict-Profil.svg")
-            .bio("Hey! I use Tailored Social Network")
-            .visibility(Visibility.FRIENDS_ONLY)
-            .createdAt(Instant.now())
-            .enabled(false)
-            .role(Role.USER)
-            .build();
+        User user;
+        if(dbUser.isPresent()){
+            user = dbUser.get();
+            user.setPassword(encryptedPassword);
+            user.setFirstname(userDTO.getFirstname());
+            user.setLastname(userDTO.getLastname());
+            user.setUsername(userDTO.getFirstname() + " " + userDTO.getLastname());
+            user.setBirthday(userDTO.getBirthday());
+            user.setGender(userDTO.getGender());
+            user.setNationality(userDTO.getNationality());
+            user.setCreatedAt(Instant.now());
+        } else {
+            user = User.builder()
+                .email(userDTO.getEmail())
+                .password(encryptedPassword)
+                .firstname(userDTO.getFirstname())
+                .lastname(userDTO.getLastname())
+                .username(userDTO.getFirstname() + " " + userDTO.getLastname())
+                .birthday(userDTO.getBirthday())
+                .gender(userDTO.getGender())
+                .nationality(userDTO.getNationality())
+                .picture("https://upload.wikimedia.org/wikipedia/commons/4/4b/User-Pict-Profil.svg")
+                .bio("Hey! I use Tailored Social Network")
+                .visibility(Visibility.FRIENDS_ONLY)
+                .createdAt(Instant.now())
+                .enabled(false)
+                .role(Role.USER)
+                .build();
+        }
 
         this.userRepository.save(user);
 
@@ -168,13 +179,6 @@ public class UserService implements UserDetailsService {
     public void modifyProfile(int id, ProfileModificationDTO userDTO) {
         User user = hasPermission(id);
 
-        this.userRepository.findByEmail(userDTO.getEmail())
-            .orElseThrow(() -> new AlreadyUsedException("Email already used"));
-
-        String encryptedPassword = this.passwordEncoder.encode(userDTO.getPassword());
-
-        user.setEmail(userDTO.getEmail());
-        user.setPassword(encryptedPassword);
         user.setFirstname(userDTO.getFirstname());
         user.setLastname(userDTO.getLastname());
         user.setUsername(userDTO.getUsername());
@@ -205,6 +209,35 @@ public class UserService implements UserDetailsService {
             .forEach(currentInterests::add);
 
         this.interestRepository.saveAll(currentInterests);  // Sauvegarder les modifications
+    }
+
+    /*
+    public void modifyEmail(int id, EmailModificationDTO userDTO) {
+        User user = hasPermission(id);
+
+        if(this.userRepository.existsByEmail(userDTO.getEmail()))
+            throw new AlreadyUsedException("Email already used");
+
+        if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
+            throw new BadPasswordException("Incorrect password");
+        }
+
+        user.setEmail(userDTO.getEmail());
+        this.userRepository.save(user);
+    }
+    */
+
+    public void modifyPassword(int id, PasswordModificationDTO userDTO) {
+        User user = hasPermission(id);
+
+        if (!passwordEncoder.matches(userDTO.getOldPassword(), user.getPassword())) {
+            throw new BadPasswordException("Incorrect password");
+        }
+
+        String newEncryptedPassword = this.passwordEncoder.encode(userDTO.getNewPassword());
+
+        user.setPassword(newEncryptedPassword);
+        this.userRepository.save(user);
     }
 
     //public void deleteProfile(int id) {
@@ -299,9 +332,18 @@ public class UserService implements UserDetailsService {
             .map(UserMapper::toUserDTO);
     }
 
+    public Map<String, EnumSet<?>> getAllEnumerations() {
+        Map<String, EnumSet<?>> enumMap = new HashMap<>();
+        enumMap.put("genders", EnumSet.allOf(Gender.class));
+        enumMap.put("interests", EnumSet.allOf(InterestTag.class));
+        enumMap.put("nationalities", EnumSet.allOf(Nationality.class));
+        enumMap.put("visibilities", EnumSet.allOf(Visibility.class));
+        return enumMap;
+    }
+
     @Override
     public User loadUserByUsername(String username) {
-        return this.userRepository.findByEmailOrUsername(username)
+        return this.userRepository.findByEmail(username)
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }

@@ -35,6 +35,7 @@ public class ApplicationSecurityConfiguration {
         return httpSecurity
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers(HttpMethod.GET, "/options").permitAll()
                 .requestMatchers(HttpMethod.POST, "/signup").permitAll()
                 .requestMatchers(HttpMethod.POST, "/activate").permitAll()
                 .requestMatchers(HttpMethod.POST, "/activate/new").permitAll()

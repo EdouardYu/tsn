@@ -48,6 +48,7 @@ public class RegistrationDTO {
     private Nationality nationality;
 
     @NotEmpty(message = "Interests cannot be empty")
+    @Size(max = 5, message = "You can select up to 5 interests")
     private List<InterestTag> interests;
 
     @JsonCreator

@@ -37,8 +37,8 @@ public class JwtService {
     @Value("${encryption.key}")
     private String ENCRYPTION_KEY;
 
-    public Map<String, String> generate(String username) {
-        User user = this.userService.loadUserByUsername(username);
+    public Map<String, String> generate(String email) {
+        User user = this.userService.loadUserByUsername(email);
 
         this.disableTokens(user);
 
@@ -69,7 +69,8 @@ public class JwtService {
 
     private Map<String, String> generateJwt(User user, long currentTime, long expirationTime) {
         Map<String, String> claims = Map.of(
-            "username", user.getUsername(),
+            "id", String.valueOf(user.getId()),
+            "email", user.getEmail(),
             "role", user.getRole().name()
         );
 

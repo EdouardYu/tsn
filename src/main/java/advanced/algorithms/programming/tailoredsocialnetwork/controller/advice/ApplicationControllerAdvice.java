@@ -29,7 +29,8 @@ public class ApplicationControllerAdvice {
         UsernameNotFoundException.class,
         NotYetEnabledException.class,
         LockedException.class,
-        PostNotFoundException.class
+        PostNotFoundException.class,
+        BadPasswordException.class
     })
     public @ResponseBody ErrorEntity handleBadRequestException(RuntimeException e) {
         log.warn(String.valueOf(e));

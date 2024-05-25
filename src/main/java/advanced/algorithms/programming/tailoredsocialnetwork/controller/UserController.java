@@ -14,8 +14,11 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @RestController
@@ -50,11 +53,11 @@ public class UserController {
     )
     public Map<String, String> signIn(@RequestBody AuthenticationDTO authenticationDTO) {
         this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-            authenticationDTO.getUsername(),
+            authenticationDTO.getEmail(),
             authenticationDTO.getPassword()
         ));
 
-        return this.jwtService.generate(authenticationDTO.getUsername());
+        return this.jwtService.generate(authenticationDTO.getEmail());
     }
 
     @ResponseStatus(value = HttpStatus.OK)
@@ -88,6 +91,18 @@ public class UserController {
     }
 
     //@ResponseStatus(value = HttpStatus.OK)
+    //@PutMapping(path = "profiles/{id}/email", consumes = MediaType.APPLICATION_JSON_VALUE)
+    //public void modifyEmail(@PathVariable int id, @Valid @RequestBody EmailModificationDTO userDTO) {
+    //    this.userService.modifyEmail(id, userDTO);
+    //}
+
+    @ResponseStatus(value = HttpStatus.OK)
+    @PutMapping(path = "profiles/{id}/password", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void modifyPassword(@PathVariable int id, @Valid @RequestBody PasswordModificationDTO userDTO) {
+        this.userService.modifyPassword(id, userDTO);
+    }
+
+    //@ResponseStatus(value = HttpStatus.OK)
     //@DeleteMapping("profiles/{id}")
     //public void deleteProfile(@PathVariable int id) {
     //    this.userService.deleteProfile(id);
@@ -115,6 +130,23 @@ public class UserController {
     @GetMapping(path = "profiles/{id}/friends", produces = MediaType.APPLICATION_JSON_VALUE)
     public Page<UserDTO> getFriends(@PathVariable int id, Pageable pageable) {
         return this.userService.getFriends(id, pageable);
+    }
+
+    @ResponseStatus(value = HttpStatus.OK)
+    @GetMapping(path = "/options", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, EnumSet<?>> getEnumerations(@RequestParam(required = false) String filters) {
+        Map<String, EnumSet<?>> allEnums = userService.getAllEnumerations();
+
+        if (filters != null && !filters.isEmpty()) {
+            String[] filterArray = filters.split(",");
+            return allEnums.entrySet().stream()
+                .filter(entry -> Arrays.stream(filterArray)
+                    .map(String::trim)
+                    .anyMatch(filter -> entry.getKey().equalsIgnoreCase(filter)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
+
+        return allEnums;
     }
 }
 

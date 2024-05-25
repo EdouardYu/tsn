@@ -15,19 +15,6 @@ import java.util.List;
 
 @Data
 public class ProfileModificationDTO {
-    @NotBlank(message = "Email cannot be empty")
-    @Email(message = "Email should be valid")
-    private String email;
-
-    @NotBlank(message = "Password cannot be empty")
-    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters long")
-    @Pattern(
-        regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!#$%&*+<=>?@^_-]).*$",
-        message = "Password must contain at least one uppercase letter, one lowercase letter, " +
-            "one number, and one special character (! # $ % & * + - < = > ? @ ^ _)"
-    )
-    private String password;
-
     @NotBlank(message = "Firstname cannot be empty")
     @Size(max = 64, message = "Firstname must be at most 64 characters long")
     @Pattern(regexp = "^[\\p{L} '-]+$", message = "Firstname can only contain letters, spaces, hyphens, and apostrophes")
@@ -67,8 +54,6 @@ public class ProfileModificationDTO {
 
     @JsonCreator
     public ProfileModificationDTO(
-        String email,
-        String password,
         String firstname,
         String lastname,
         String username,
@@ -80,8 +65,6 @@ public class ProfileModificationDTO {
         Visibility visibility,
         List<InterestTag> interests
     ) {
-        this.email = email == null ? null : email.toLowerCase();
-        this.password = password;
         this.firstname = firstname == null ? null : firstname.trim();
         this.lastname = lastname == null ? null : lastname.trim();
         this.username = username == null ? null : username.trim();
