@@ -5,7 +5,6 @@ import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Nationality;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -49,7 +48,8 @@ public class ProfileModificationDTO {
     @NotNull(message = "Visibility cannot be null")
     private Visibility visibility;
 
-    @Valid
+    @NotEmpty(message = "Interests cannot be empty")
+    @Size(max = 5, message = "You can select up to 5 interests")
     private List<InterestTag> interests;
 
     @JsonCreator
