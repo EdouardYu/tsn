@@ -14,4 +14,5 @@ import java.io.Serializable;
 public class ShareId implements Serializable {
     private int userId;
     private int sharedPostId;
+    private int postId;
 }
