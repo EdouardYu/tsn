@@ -3,7 +3,6 @@ package advanced.algorithms.programming.tailoredsocialnetwork.service;
 import advanced.algorithms.programming.tailoredsocialnetwork.dto.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Role;
-import advanced.algorithms.programming.tailoredsocialnetwork.entity.id.ShareId;
 import advanced.algorithms.programming.tailoredsocialnetwork.repository.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.*;
 import lombok.AllArgsConstructor;
@@ -25,8 +24,8 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
-    public PostDTO createPost(PostDTO postDTO, String username) {
-        User user = userRepository.findByEmailOrUsername(username)
+    public PostDTO createPost(PostDTO postDTO, String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Post post = Post.builder()
                 .content(postDTO.getContent())
@@ -56,7 +55,7 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public void deletePost(int id, String username) {
+    public void deletePost(int id, String email) {
         Post post = getPostById(id);
         checkPermission(post.getUser().getId());
         postRepository.delete(post);
@@ -66,9 +65,9 @@ public class PostService {
         return postRepository.findAll().stream().map(this::toPostDTO).collect(Collectors.toList());
     }
 
-    public LikeDTO likePost(int id, String username) {
+    public LikeDTO likePost(int id, String email) {
         Post post = getPostById(id);
-        User user = userRepository.findByEmailOrUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         Like like = new Like();
@@ -82,9 +81,9 @@ public class PostService {
         return new LikeDTO(post.getId(), user.getUsername(), like.getLikedAt());
     }
 
-    public void unlikePost(int id, String username) {
+    public void unlikePost(int id, String email) {
         Post post = getPostById(id);
-        User user = userRepository.findByEmailOrUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         // Find the like associated with the user and post
@@ -98,9 +97,9 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public CommentDTO commentPost(int id, CommentDTO commentDTO, String username) {
+    public CommentDTO commentPost(int id, CommentDTO commentDTO, String email) {
         Post post = getPostById(id);
-        User user = userRepository.findByEmailOrUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         Post reply = Post.builder()
@@ -118,7 +117,7 @@ public class PostService {
 
     public void deleteComment(int postId, int commentId, String username) {
         Post post = getPostById(postId);
-        User user = userRepository.findByEmailOrUsername(username)
+        User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         // Find the comment associated with the user and post
@@ -132,9 +131,9 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public ShareDTO sharePost(int id, String username) {
+    public ShareDTO sharePost(int id, String email) {
         Post post = getPostById(id);
-        User user = userRepository.findByEmailOrUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         Share share = new Share();
@@ -149,8 +148,8 @@ public class PostService {
 
 
     private User getCurrentUser() {
-        String currentUsername = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return userRepository.findByEmailOrUsername(currentUsername)
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findByEmail(user.getEmail())
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 
