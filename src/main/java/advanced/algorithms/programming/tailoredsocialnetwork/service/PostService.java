@@ -8,6 +8,7 @@ import advanced.algorithms.programming.tailoredsocialnetwork.repository.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,14 +46,13 @@ public class PostService {
         return toPostDTO(post);
     }
 
-    public void updatePost(int id, PostDTO postDTO) {
+
+    public void updatePost(int id, PostDTO postDTO, String username) {
         Post post = getPostById(id);
         checkPermission(post.getUser().getId());
-
         post.setContent(postDTO.getContent());
         post.setPicture(postDTO.getPicture());
         post.setVisibility(postDTO.getVisibility());
-        post.setCreatedAt(Instant.now());
         postRepository.save(post);
     }
 
@@ -159,6 +159,7 @@ public class PostService {
                 .orElseThrow(() -> new NotFoundException("Post not found"));
     }
 
+
     private void checkPermission(int userId) {
         User currentUser = getCurrentUser();
         if (currentUser.getId() != userId && !currentUser.getRole().equals(Role.ADMINISTRATOR)) {
@@ -175,5 +176,13 @@ public class PostService {
                 post.getVisibility(),
                 post.getUser().getUsername()
         );
+    }
+
+    public List<PostDTO> getPostsByUser(String username) {
+        User user = userRepository.findByEmailOrUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        return postRepository.findByUser(user).stream()
+                .map(this::toPostDTO)
+                .collect(Collectors.toList());
     }
 }

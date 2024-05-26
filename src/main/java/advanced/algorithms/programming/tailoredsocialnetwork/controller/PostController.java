@@ -71,4 +71,16 @@ public class PostController {
         postService.deletePost(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updatePost(@PathVariable int id, @Valid @RequestBody PostDTO postDTO, @AuthenticationPrincipal UserDetails userDetails) {
+        postService.updatePost(id, postDTO, userDetails.getUsername());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/user/{username}")
+    public ResponseEntity<List<PostDTO>> getPostsByUser(@PathVariable String username) {
+        return ResponseEntity.ok(postService.getPostsByUser(username));
+    }
+
 }
