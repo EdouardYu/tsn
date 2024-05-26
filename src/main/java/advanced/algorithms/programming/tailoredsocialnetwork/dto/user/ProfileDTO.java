@@ -19,6 +19,7 @@ public class ProfileDTO {
     private String email;
     private String firstname;
     private String lastname;
+    private String username;
     private LocalDate birthday;
     private Gender gender;
     private Nationality nationality;

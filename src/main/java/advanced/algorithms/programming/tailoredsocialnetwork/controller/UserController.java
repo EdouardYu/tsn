@@ -86,8 +86,8 @@ public class UserController {
 
     @ResponseStatus(value = HttpStatus.OK)
     @PutMapping(path = "profiles/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void modifyProfile(@PathVariable int id, @Valid @RequestBody ProfileModificationDTO userDTO) {
-        this.userService.modifyProfile(id, userDTO);
+    public ProfileDTO modifyProfile(@PathVariable int id, @Valid @RequestBody ProfileModificationDTO userDTO) {
+        return this.userService.modifyProfile(id, userDTO);
     }
 
     //@ResponseStatus(value = HttpStatus.OK)

@@ -164,6 +164,7 @@ public class UserService implements UserDetailsService {
                 .email(profile.getEmail())
                 .firstname(profile.getFirstname())
                 .lastname(profile.getLastname())
+                .username(profile.getUsername())
                 .birthday(profile.getBirthday())
                 .gender(profile.getGender())
                 .nationality(profile.getNationality())
@@ -176,7 +177,7 @@ public class UserService implements UserDetailsService {
                 .build();
     }
 
-    public void modifyProfile(int id, ProfileModificationDTO userDTO) {
+    public ProfileDTO modifyProfile(int id, ProfileModificationDTO userDTO) {
         User user = hasPermission(id);
 
         user.setFirstname(userDTO.getFirstname());
@@ -189,12 +190,28 @@ public class UserService implements UserDetailsService {
         user.setBio(userDTO.getBio());
         user.setVisibility(userDTO.getVisibility());
 
-        this.userRepository.save(user);
+        user = this.userRepository.save(user);
 
-        this.updateInterests(user, userDTO.getInterests());
+        List<Interest> interests = this.updateInterests(user, userDTO.getInterests());
+
+        return ProfileDTO.builder()
+            .email(user.getEmail())
+            .firstname(user.getFirstname())
+            .lastname(user.getLastname())
+            .username(user.getUsername())
+            .birthday(user.getBirthday())
+            .gender(user.getGender())
+            .nationality(user.getNationality())
+            .picture(user.getPicture())
+            .bio(user.getBio())
+            .interests(interests)
+            .visibility(user.getVisibility())
+            .createdAt(user.getCreatedAt())
+            .role(user.getRole())
+            .build();
     }
 
-    private void updateInterests(User user, List<InterestTag> newInterestsTag) {
+    private List<Interest> updateInterests(User user, List<InterestTag> newInterestsTag) {
         List<Interest> currentInterests = user.getInterests();
 
         currentInterests.removeIf(interest -> !newInterestsTag.contains(interest.getInterest()));
@@ -208,7 +225,7 @@ public class UserService implements UserDetailsService {
             .map(tag -> Interest.builder().interest(tag).user(user).build())
             .forEach(currentInterests::add);
 
-        this.interestRepository.saveAll(currentInterests);  // Sauvegarder les modifications
+        return this.interestRepository.saveAll(currentInterests);
     }
 
     /*
