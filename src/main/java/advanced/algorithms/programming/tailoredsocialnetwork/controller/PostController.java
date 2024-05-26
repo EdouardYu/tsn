@@ -71,10 +71,4 @@ public class PostController {
         postService.deletePost(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
-
-    @DeleteMapping("/{postId}/shares/{shareId}")
-    public ResponseEntity<Void> deleteShare(@PathVariable int postId, @PathVariable int shareId, @AuthenticationPrincipal UserDetails userDetails) {
-        postService.deleteShare(postId, shareId, userDetails.getUsername());
-        return ResponseEntity.noContent().build();
-    }
 }
