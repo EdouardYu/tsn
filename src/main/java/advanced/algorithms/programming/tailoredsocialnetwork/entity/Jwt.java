@@ -18,10 +18,15 @@ public class Jwt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private String value;
+
     @Column(name = "expired_at")
     private Instant expiredAt;
+
+    @Column(name = "is_enabled")
     private boolean enabled = true;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

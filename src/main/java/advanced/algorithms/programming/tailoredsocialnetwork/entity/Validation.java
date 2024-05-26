@@ -19,10 +19,15 @@ public class Validation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private String code;
+
     @Column(name = "expired_at")
     private Instant expiredAt = Instant.now().plus(10, ChronoUnit.MINUTES);
+
+    @Column(name = "is_enabled")
     private boolean enabled = true;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

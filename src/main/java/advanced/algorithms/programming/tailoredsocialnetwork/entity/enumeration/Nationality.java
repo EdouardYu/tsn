@@ -1,6 +1,7 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration;
 
 public enum Nationality {
+    UNSPECIFIED,
     ARGENTINA,
     AUSTRALIA,
     AUSTRIA,
@@ -50,6 +51,5 @@ public enum Nationality {
     UNITED_KINGDOM,
     UNITED_STATES,
     VENEZUELA,
-    VIETNAM,
-    UNSPECIFIED
+    VIETNAM
 }

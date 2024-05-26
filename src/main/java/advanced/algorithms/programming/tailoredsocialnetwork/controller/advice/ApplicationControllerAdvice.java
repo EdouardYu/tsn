@@ -1,10 +1,7 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.controller.advice;
 
 import advanced.algorithms.programming.tailoredsocialnetwork.dto.ErrorEntity;
-import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.AlreadyProcessedException;
-import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.AlreadyUsedException;
-import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.NotYetEnabledException;
-import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.ValidationCodeException;
+import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.*;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -31,7 +28,9 @@ public class ApplicationControllerAdvice {
         ValidationCodeException.class,
         UsernameNotFoundException.class,
         NotYetEnabledException.class,
-        LockedException.class
+        LockedException.class,
+        PostNotFoundException.class,
+        BadPasswordException.class
     })
     public @ResponseBody ErrorEntity handleBadRequestException(RuntimeException e) {
         log.warn(String.valueOf(e));

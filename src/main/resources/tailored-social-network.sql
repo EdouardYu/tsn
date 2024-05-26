@@ -51,12 +51,12 @@ CREATE TABLE IF NOT EXISTS follow (
 );
 
 CREATE TABLE IF NOT EXISTS relationship (
-    user1_id INTEGER NOT NULL,
-    user2_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    friend_id INTEGER NOT NULL,
     started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user1_id, user2_id),
-    CONSTRAINT relationship_user1_fk FOREIGN KEY (user1_id) REFERENCES "user"(id),
-    CONSTRAINT relationship_user2_fk FOREIGN KEY (user2_id) REFERENCES "user"(id)
+    PRIMARY KEY (user_id, friend_id),
+    CONSTRAINT relationship_user_fk FOREIGN KEY (user_id) REFERENCES "user"(id),
+    CONSTRAINT relationship_friend_fk FOREIGN KEY (friend_id) REFERENCES "user"(id)
 );
 
 CREATE TABLE IF NOT EXISTS post (
@@ -71,10 +71,6 @@ CREATE TABLE IF NOT EXISTS post (
     CONSTRAINT post_parent_fk FOREIGN KEY (parent_id) REFERENCES post(id)
 );
 
-/*
-visibility: Visibility level of the post, e.g., "public", "friends", "private"
-*/
-
 CREATE TABLE IF NOT EXISTS view (
     post_id INT NOT NULL,
     user_id INT NOT NULL,
@@ -84,7 +80,7 @@ CREATE TABLE IF NOT EXISTS view (
     CONSTRAINT view_post_fk FOREIGN KEY (post_id) REFERENCES post(id)
 );
 
-CREATE TABLE "like" (
+CREATE TABLE IF NOT EXISTS "like" (
     user_id INTEGER NOT NULL,
     post_id INTEGER NOT NULL,
     liked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -21,26 +21,40 @@ public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private String content;
+
     private String picture;
+
     @Column(name = "created_at")
     private Instant createdAt = Instant.now();
+
     @Enumerated(EnumType.STRING)
     private Visibility visibility = Visibility.FRIENDS_ONLY;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Post parent;
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "parent")
-    private List<Post> replies = new ArrayList<>();
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "post")
+
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<Post> comments = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY)
     private List<View> views = new ArrayList<>();
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "post")
+
+    @OneToMany(fetch = FetchType.LAZY)
     private List<Like> likes = new ArrayList<>();
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "post")
+
+    @OneToMany(fetch = FetchType.LAZY)
     private List<Share> shares = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<Post> replies = new ArrayList<>();
+
 
     public void addReply(Post reply) {
         replies.add(reply);
