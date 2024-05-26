@@ -71,6 +71,7 @@ public class JwtService {
         Map<String, String> claims = Map.of(
             "id", String.valueOf(user.getId()),
             "email", user.getEmail(),
+            "picture", user.getPicture(),
             "role", user.getRole().name()
         );
 
