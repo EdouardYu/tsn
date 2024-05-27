@@ -158,7 +158,14 @@ public class UserService implements UserDetailsService {
             !Visibility.PUBLIC.equals(profile.getVisibility()) &&
             !(Visibility.FRIENDS_ONLY.equals(profile.getVisibility()) &&
                 this.relationshipRepository.isFriend(user.getId(), profile.getId())))
-            throw new AccessDeniedException("Access denied");
+            return ProfileDTO.builder()
+                .firstname(profile.getFirstname())
+                .lastname(profile.getLastname())
+                .username(profile.getUsername())
+                .picture(profile.getPicture())
+                .visibility(profile.getVisibility())
+                .role(profile.getRole())
+                .build();
 
         return ProfileDTO.builder()
                 .email(profile.getEmail())
@@ -273,7 +280,7 @@ public class UserService implements UserDetailsService {
         return dbUser;
     }
 
-    public void followUser(int followerId, int followedId) {
+    public boolean followUser(int followerId, int followedId) {
         User user = hasPermission(followerId);
 
         User followed = this.userRepository.findById(followedId)
@@ -309,9 +316,11 @@ public class UserService implements UserDetailsService {
 
             this.relationshipRepository.saveAll(relationships);
         }
+
+        return true;
     }
 
-    public void unfollowUser(int followerId, int followedId) {
+    public boolean unfollowUser(int followerId, int followedId) {
         hasPermission(followerId);
 
         if(!this.userRepository.existsById(followedId))
@@ -326,6 +335,17 @@ public class UserService implements UserDetailsService {
         }
 
         this.followRepository.deleteByFollowerIdAndFollowedId(followerId, followedId);
+
+        return false;
+    }
+
+    public boolean userFollowed(int followerId, int followedId) {
+        hasPermission(followerId);
+
+        if(!this.userRepository.existsById(followedId))
+            throw new UsernameNotFoundException("The user you tried to see if you follow him is not found");
+
+        return this.followRepository.existsByFollowerIdAndFollowedId(followerId, followedId);
     }
 
     public Page<UserDTO> getRecommendedProfiles(List<SearchCriteria> criteria, Pageable pageable) {
