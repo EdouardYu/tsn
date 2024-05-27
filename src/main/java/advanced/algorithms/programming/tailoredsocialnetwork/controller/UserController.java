@@ -121,9 +121,15 @@ public class UserController {
     }
 
     @ResponseStatus(value = HttpStatus.OK)
-    @GetMapping(value = "profiles/{followerId}/followed/{followedId}/")
+    @GetMapping(value = "profiles/{followerId}/followed/{followedId}")
     public boolean userFollowed(@PathVariable int followerId, @PathVariable int followedId) {
         return this.userService.userFollowed(followerId, followedId);
+    }
+
+    @ResponseStatus(value = HttpStatus.OK)
+    @GetMapping(value = "profiles/{userId}/friends/{friendId}")
+    public boolean isFriend(@PathVariable int userId, @PathVariable int friendId) {
+        return this.userService.isFriend(userId, friendId);
     }
 
     @ResponseStatus(value = HttpStatus.OK)

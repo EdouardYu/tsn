@@ -15,6 +15,8 @@ public interface RelationshipRepository extends JpaRepository<Relationship, Inte
 
     Page<Relationship> findByUserId(int userId, Pageable pageable);
 
+    boolean existsByUserIdAndFriendId(int userId, int friendId);
+
 }
 
 

@@ -348,6 +348,15 @@ public class UserService implements UserDetailsService {
         return this.followRepository.existsByFollowerIdAndFollowedId(followerId, followedId);
     }
 
+    public boolean isFriend(int userId, int friendId) {
+        hasPermission(userId);
+
+        if(!this.userRepository.existsById(friendId))
+            throw new UsernameNotFoundException("Fiend is not found");
+
+        return this.relationshipRepository.existsByUserIdAndFriendId(userId, friendId);
+    }
+
     public Page<UserDTO> getRecommendedProfiles(List<SearchCriteria> criteria, Pageable pageable) {
         UserSpecification specs = criteria.stream()
             .map(UserSpecification::new)
