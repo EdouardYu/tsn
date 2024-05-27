@@ -109,15 +109,33 @@ public class UserController {
     //}
 
     @ResponseStatus(value = HttpStatus.OK)
-    @GetMapping(value = "profiles/{followerId}/follow/{followedId}")
-    public void followUser(@PathVariable int followerId, @PathVariable int followedId) {
-        this.userService.followUser(followerId, followedId);
+    @PostMapping(value = "profiles/{followerId}/follow/{followedId}")
+    public boolean followUser(@PathVariable int followerId, @PathVariable int followedId) {
+        return this.userService.followUser(followerId, followedId);
     }
 
     @ResponseStatus(value = HttpStatus.OK)
-    @GetMapping(value = "profiles/{followerId}/unfollow/{followedId}")
-    public void unfollowUser(@PathVariable int followerId, @PathVariable int followedId) {
-        this.userService.unfollowUser(followerId, followedId);
+    @PostMapping(value = "profiles/{followerId}/unfollow/{followedId}")
+    public boolean unfollowUser(@PathVariable int followerId, @PathVariable int followedId) {
+        return this.userService.unfollowUser(followerId, followedId);
+    }
+
+    @ResponseStatus(value = HttpStatus.OK)
+    @GetMapping(value = "profiles/{followerId}/followed/{followedId}")
+    public boolean userFollowed(@PathVariable int followerId, @PathVariable int followedId) {
+        return this.userService.userFollowed(followerId, followedId);
+    }
+
+    @ResponseStatus(value = HttpStatus.OK)
+    @GetMapping(value = "profiles/{userId}/friends/{friendId}")
+    public boolean isFriend(@PathVariable int userId, @PathVariable int friendId) {
+        return this.userService.isFriend(userId, friendId);
+    }
+
+    @ResponseStatus(value = HttpStatus.OK)
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<UserDTO> searchUsers(@RequestParam String term) {
+        return this.userService.searchUsers(term);
     }
 
     @ResponseStatus(value = HttpStatus.OK)

@@ -5,16 +5,17 @@ import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Nationality;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Role;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Set;
 import java.util.List;
 
 @Builder
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProfileDTO {
     private String email;
     private String firstname;

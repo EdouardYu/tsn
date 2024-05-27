@@ -14,6 +14,7 @@ import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.*
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -158,7 +159,14 @@ public class UserService implements UserDetailsService {
             !Visibility.PUBLIC.equals(profile.getVisibility()) &&
             !(Visibility.FRIENDS_ONLY.equals(profile.getVisibility()) &&
                 this.relationshipRepository.isFriend(user.getId(), profile.getId())))
-            throw new AccessDeniedException("Access denied");
+            return ProfileDTO.builder()
+                .firstname(profile.getFirstname())
+                .lastname(profile.getLastname())
+                .username(profile.getUsername())
+                .picture(profile.getPicture())
+                .visibility(profile.getVisibility())
+                .role(profile.getRole())
+                .build();
 
         return ProfileDTO.builder()
                 .email(profile.getEmail())
@@ -273,7 +281,7 @@ public class UserService implements UserDetailsService {
         return dbUser;
     }
 
-    public void followUser(int followerId, int followedId) {
+    public boolean followUser(int followerId, int followedId) {
         User user = hasPermission(followerId);
 
         User followed = this.userRepository.findById(followedId)
@@ -309,9 +317,11 @@ public class UserService implements UserDetailsService {
 
             this.relationshipRepository.saveAll(relationships);
         }
+
+        return true;
     }
 
-    public void unfollowUser(int followerId, int followedId) {
+    public boolean unfollowUser(int followerId, int followedId) {
         hasPermission(followerId);
 
         if(!this.userRepository.existsById(followedId))
@@ -326,6 +336,32 @@ public class UserService implements UserDetailsService {
         }
 
         this.followRepository.deleteByFollowerIdAndFollowedId(followerId, followedId);
+
+        return false;
+    }
+
+    public boolean userFollowed(int followerId, int followedId) {
+        hasPermission(followerId);
+
+        if(!this.userRepository.existsById(followedId))
+            throw new UsernameNotFoundException("The user you tried to see if you follow him is not found");
+
+        return this.followRepository.existsByFollowerIdAndFollowedId(followerId, followedId);
+    }
+
+    public boolean isFriend(int userId, int friendId) {
+        hasPermission(userId);
+
+        if(!this.userRepository.existsById(friendId))
+            throw new UsernameNotFoundException("Fiend is not found");
+
+        return this.relationshipRepository.existsByUserIdAndFriendId(userId, friendId);
+    }
+
+    public List<UserDTO> searchUsers(String term) {
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        List<User> users = this.userRepository.searchUsers(term, pageRequest);
+        return users.stream().map(UserMapper::toUserDTO).toList();
     }
 
     public Page<UserDTO> getRecommendedProfiles(List<SearchCriteria> criteria, Pageable pageable) {
