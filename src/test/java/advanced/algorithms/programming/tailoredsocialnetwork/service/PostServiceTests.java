@@ -36,7 +36,7 @@ class PostServiceTests {
     static void setUp(@Autowired UserRepository userRepository) {
         user = new User();
         user.setUsername("Testing");
-        user.setEmail("test5@example.com");
+        user.setEmail("test6@example.com");
         user.setPassword("password");
         user.setFirstname("Test");
         user.setLastname("User");
@@ -128,15 +128,42 @@ class PostServiceTests {
 
     @Test
     void commentPost_WithValidInput_ShouldCommentPost() {
+        // Create a post
         PostDTO postDTO = new PostDTO("Test content", "test.jpg", Instant.now(), Visibility.PUBLIC, user.getUsername());
         PostDTO createdPost = postService.createPost(postDTO, user.getEmail());
 
-        CommentDTO commentDTO = new CommentDTO(0, "Test comment", user.getUsername(), Instant.now());
+        // Set the commentedAt time
+        Instant commentedAt = Instant.now();
+
+        // Use the ID of the created post for the parent ID of the comment
+        // Create a CommentDTO object using the appropriate constructor
+        CommentDTO commentDTO = new CommentDTO("Test comment", null, commentedAt, null, user.getUsername(), createdPost.getId());
+
+
+        // Comment on the created post
         CommentDTO createdComment = postService.commentPost(createdPost.getId(), commentDTO, user.getEmail());
 
         assertNotNull(createdComment);
+        assertEquals(createdPost.getId(), createdComment.getParentId());
         assertEquals(commentDTO.getContent(), createdComment.getContent());
-        assertEquals(user.getUsername(), createdComment.getUsername());
+        assertEquals(user.getEmail(), createdComment.getEmail());
+    }
+
+    @Test
+    void deleteComment_WithValidInput_ShouldDeleteComment() {
+        // Create a post
+        PostDTO postDTO = new PostDTO("Test content", "test.jpg", Instant.now(), Visibility.PUBLIC, user.getUsername());
+        PostDTO createdPost = postService.createPost(postDTO, user.getEmail());
+
+        // Comment on the created post
+        CommentDTO commentDTO = new CommentDTO("Test comment", null, Instant.now(), null, user.getUsername(), createdPost.getId());
+        CommentDTO createdComment = postService.commentPost(createdPost.getId(), commentDTO, user.getEmail());
+
+        // Delete the created comment
+        postService.deleteComment(createdPost.getId(), createdComment.getId(), user.getEmail());
+
+        // Ensure that the comment is deleted by attempting to retrieve it
+        assertThrows(NotFoundException.class, () -> postService.getComment(createdPost.getId(), createdComment.getId()));
     }
 
     @Test
