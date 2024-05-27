@@ -29,6 +29,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final ViewRepository viewRepository;
+    private final ShareRepository shareRepository;
 
     public PostDTO createPost(PostDTO postDTO, String email) {
         User user = userRepository.findByEmail(email)
@@ -131,7 +132,7 @@ public class PostService {
                 comment.getCreatedAt(),
                 comment.getVisibility(),
                 comment.getUser().getEmail(),
-                postId // Set the parent ID to the ID of the parent post
+                postId
         );
     }
 
@@ -156,15 +157,32 @@ public class PostService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        Share share = new Share();
-        share.setUser(user);
-        share.setPost(post);
+        Share share = Share.builder()
+                .user(user)
+                .sharedPost(post)
+                .post(createSharedPost(post, user))
+                .build();
 
-        post.addShare(share);
-        postRepository.save(post);
+        shareRepository.save(share);
 
-        return new ShareDTO(post.getId(), user.getUsername());
+        return new ShareDTO(id, user.getUsername(), share.getPost().getId());
     }
+
+
+    private Post createSharedPost(Post post, User user) {
+        // Create a new post based on the shared post
+        Post sharedPost = Post.builder()
+                .content(post.getContent())
+                .picture(post.getPicture())
+                .createdAt(Instant.now())
+                .visibility(post.getVisibility())
+                .user(user)
+                .parent(post.getParent())
+                .build();
+
+        return postRepository.save(sharedPost);
+    }
+
 
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

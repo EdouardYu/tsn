@@ -1,6 +1,7 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.service;
 
 import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.*;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.Post;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.User;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.View;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.*;
@@ -41,7 +42,7 @@ class PostServiceTests {
     static void setUp(@Autowired UserRepository userRepository) {
         user = new User();
         user.setUsername("Testing");
-        user.setEmail("test15@example.com");
+        user.setEmail("test24@example.com");
         user.setPassword("password");
         user.setFirstname("Test");
         user.setLastname("User");
@@ -173,14 +174,26 @@ class PostServiceTests {
 
     @Test
     void sharePost_WithValidInput_ShouldSharePost() {
+        // Create a post
         PostDTO postDTO = new PostDTO("Test content", "test.jpg", Instant.now(), Visibility.PUBLIC, user.getUsername());
         PostDTO createdPost = postService.createPost(postDTO, user.getEmail());
 
+        // Share the post
         ShareDTO shareDTO = postService.sharePost(createdPost.getId(), user.getEmail());
 
         assertNotNull(shareDTO);
-        assertEquals(createdPost.getId(), shareDTO.getPostId());
+        assertEquals(createdPost.getId(), shareDTO.getSharedPostId());
         assertEquals(user.getUsername(), shareDTO.getUsername());
+
+        // Retrieve the shared post from the database
+        Post sharedPost = postRepository.findById(shareDTO.getPostId())
+                .orElseThrow(() -> new NotFoundException("Shared post not found"));
+
+        // Ensure that the shared post exists
+        assertNotNull(sharedPost);
+        assertEquals(createdPost.getContent(), sharedPost.getContent());
+        assertEquals(createdPost.getPicture(), sharedPost.getPicture());
+        assertEquals(user.getEmail(), sharedPost.getUser().getEmail()); // Ensure the shared post is associated with the user who shared it
     }
 
     @Test
@@ -216,6 +229,23 @@ class PostServiceTests {
         // Check if the view was recorded in the repository
         assertEquals(1, views.size());
         assertEquals(user.getEmail(), views.get(0).getUser().getEmail());
+    }
+
+    @Test
+    void recordPostView_TwiceForSameUser_ShouldStoreOneView() {
+        PostDTO postDTO = new PostDTO("Test content", "test.jpg", Instant.now(), Visibility.PUBLIC, user.getUsername());
+        PostDTO createdPost = postService.createPost(postDTO, user.getEmail());
+
+        // Record post view twice for the same user
+        postService.recordPostView(createdPost.getId(), user.getEmail());
+        postService.recordPostView(createdPost.getId(), user.getEmail());
+
+        // Retrieve the views for the post
+        List<View> views = viewRepository.findAllByPostId(createdPost.getId());
+
+        // Check if the view was recorded in the repository
+        assertEquals(1, views.size());
+        assertEquals(user.getEmail(), views.get(0).getUser().getEmail()); // Ensure only one view is stored
     }
 
 }
