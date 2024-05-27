@@ -1,4 +1,4 @@
-package advanced.algorithms.programming.tailoredsocialnetwork.dto;
+package advanced.algorithms.programming.tailoredsocialnetwork.dto.post;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import jakarta.validation.constraints.NotBlank;

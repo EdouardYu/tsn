@@ -1,6 +1,9 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.controller;
 
-import advanced.algorithms.programming.tailoredsocialnetwork.dto.*;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.CommentDTO;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.LikeDTO;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.PostDTO;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.ShareDTO;
 import advanced.algorithms.programming.tailoredsocialnetwork.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +24,7 @@ public class PostController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = "application/json")
     public ResponseEntity<PostDTO> createPost(@Valid @RequestBody PostDTO postDTO, @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(postService.createPost(postDTO, userDetails.getUsername()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(postDTO, userDetails.getUsername()));
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -82,5 +85,4 @@ public class PostController {
     public ResponseEntity<List<PostDTO>> getPostsByUser(@PathVariable String username) {
         return ResponseEntity.ok(postService.getPostsByUser(username));
     }
-
 }

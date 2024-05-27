@@ -56,24 +56,36 @@ public class Post {
     private List<Post> replies = new ArrayList<>();
 
 
+    public List<Like> getLikes() {
+        if (likes == null)
+            likes = new ArrayList<>();
+        return likes;
+    }
+
     public void addReply(Post reply) {
         replies.add(reply);
         reply.setParent(this);
     }
 
     public void addView(View view) {
+        if (views == null)
+            views = new ArrayList<>();
         views.add(view);
     }
 
     public void addLike(Like like) {
+        if(likes == null)
+            likes = new ArrayList<>();
         likes.add(like);
     }
 
-    public void removeLikeByUsername(String username) {
-        likes.removeIf(like -> like.getUser().getEmail().equals(username));
+    public void removeLikeByEmail(String email) {
+        likes.removeIf(like -> like.getUser().getEmail().equals(email));
     }
 
     public void addShare(Share share) {
+        if (shares == null)
+            shares = new ArrayList<>();
         shares.add(share);
     }
 

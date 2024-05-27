@@ -1,13 +1,17 @@
 package advanced.algorithms.programming.tailoredsocialnetwork.service;
 
-import advanced.algorithms.programming.tailoredsocialnetwork.dto.*;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.CommentDTO;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.LikeDTO;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.PostDTO;
+import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.ShareDTO;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.Role;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.id.LikeId;
 import advanced.algorithms.programming.tailoredsocialnetwork.repository.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,12 +25,15 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Service
 public class PostService {
+
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final LikeRepository likeRepository;
 
     public PostDTO createPost(PostDTO postDTO, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+
         Post post = Post.builder()
                 .content(postDTO.getContent())
                 .picture(postDTO.getPicture())
@@ -34,21 +41,18 @@ public class PostService {
                 .visibility(postDTO.getVisibility())
                 .user(user)
                 .build();
+
         Post savedPost = postRepository.save(post);
-        return toPostDTO(savedPost);
+        long likeCount = likeRepository.countLikesByPostId(savedPost.getId());
+        List<String> likedBy = likeRepository.findUsernamesByPostId(savedPost.getId());
+
+        return new PostDTO(savedPost.getId(), savedPost.getContent(), savedPost.getPicture(), savedPost.getCreatedAt(), savedPost.getVisibility(), savedPost.getUser().getUsername(), likeCount, likedBy);
     }
 
-
-    public PostDTO getPost(int id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Post not found"));
-        return toPostDTO(post);
-    }
-
-
-    public void updatePost(int id, PostDTO postDTO, String username) {
+    public void updatePost(int id, PostDTO postDTO, String email) {
         Post post = getPostById(id);
-        checkPermission(post.getUser().getId());
+        checkPermission(post.getUser().getEmail(), email);
+
         post.setContent(postDTO.getContent());
         post.setPicture(postDTO.getPicture());
         post.setVisibility(postDTO.getVisibility());
@@ -57,7 +61,7 @@ public class PostService {
 
     public void deletePost(int id, String email) {
         Post post = getPostById(id);
-        checkPermission(post.getUser().getId());
+        checkPermission(post.getUser().getEmail(), email);
         postRepository.delete(post);
     }
 
@@ -70,15 +74,14 @@ public class PostService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        Like like = new Like();
-        like.setUser(user);
-        like.setPost(post);
-        like.setLikedAt(Instant.now());
+        Like like = Like.builder()
+                .post(post)
+                .user(user)
+                .build();
 
-        post.addLike(like);
-        postRepository.save(post);
+        likeRepository.save(like);
 
-        return new LikeDTO(post.getId(), user.getUsername(), like.getLikedAt());
+        return new LikeDTO(post.getId(), user.getEmail(), like.getLikedAt());
     }
 
     public void unlikePost(int id, String email) {
@@ -86,16 +89,12 @@ public class PostService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        // Find the like associated with the user and post
-        Like like = post.getLikes().stream()
-                .filter(l -> l.getUser().equals(user))
-                .findFirst()
+        Like like = likeRepository.findById(new LikeId(user, post))
                 .orElseThrow(() -> new NotFoundException("Like not found"));
 
-        // Remove the like from the post
-        post.getLikes().remove(like);
-        postRepository.save(post);
+        likeRepository.delete(like);
     }
+
 
     public CommentDTO commentPost(int id, CommentDTO commentDTO, String email) {
         Post post = getPostById(id);
@@ -115,18 +114,16 @@ public class PostService {
         return new CommentDTO(reply.getId(), reply.getContent(), user.getUsername(), reply.getCreatedAt());
     }
 
-    public void deleteComment(int postId, int commentId, String username) {
+    public void deleteComment(int postId, int commentId, String email) {
         Post post = getPostById(postId);
-        User user = userRepository.findByEmail(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        // Find the comment associated with the user and post
         Post comment = post.getReplies().stream()
                 .filter(c -> c.getId() == commentId && c.getUser().equals(user))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Comment not found"));
 
-        // Remove the comment from the post
         post.getReplies().remove(comment);
         postRepository.save(post);
     }
@@ -146,11 +143,19 @@ public class PostService {
         return new ShareDTO(post.getId(), user.getUsername());
     }
 
-
     private User getCurrentUser() {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return userRepository.findByEmail(user.getEmail())
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+    }
+
+    public PostDTO getPost(int id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Post not found"));
+        long likeCount = likeRepository.countLikesByPostId(post.getId());
+        List<String> likedBy = likeRepository.findUsernamesByPostId(post.getId());
+
+        return new PostDTO(id, post.getContent(), post.getPicture(), post.getCreatedAt(), post.getVisibility(), post.getUser().getUsername(), likeCount, likedBy);
     }
 
     private Post getPostById(int id) {
@@ -158,17 +163,17 @@ public class PostService {
                 .orElseThrow(() -> new NotFoundException("Post not found"));
     }
 
+    private void checkPermission(String postOwnerEmail, String currentEmail) {
+        User currentUser = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
-    private void checkPermission(int userId) {
-        User currentUser = getCurrentUser();
-        if (currentUser.getId() != userId && !currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+        if (!postOwnerEmail.equals(currentEmail) && !currentUser.getRole().equals(Role.ADMINISTRATOR)) {
             throw new UnauthorizedException("You are not authorized to perform this action");
         }
     }
 
     private PostDTO toPostDTO(Post post) {
         return new PostDTO(
-                post.getId(),
                 post.getContent(),
                 post.getPicture(),
                 post.getCreatedAt(),
@@ -177,8 +182,8 @@ public class PostService {
         );
     }
 
-    public List<PostDTO> getPostsByUser(String username) {
-        User user = userRepository.findByEmailOrUsername(username)
+    public List<PostDTO> getPostsByUser(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         return postRepository.findByUser(user).stream()
                 .map(this::toPostDTO)
