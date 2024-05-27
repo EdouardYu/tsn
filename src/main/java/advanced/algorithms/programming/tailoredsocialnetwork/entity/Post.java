@@ -30,7 +30,7 @@ public class Post {
     private Instant createdAt = Instant.now();
 
     @Enumerated(EnumType.STRING)
-    private Visibility visibility = Visibility.FRIENDS_ONLY;
+    private Visibility visibility;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -40,30 +40,22 @@ public class Post {
     @JoinColumn(name = "parent_id")
     private Post parent;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Post> comments = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<View> views = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Like> likes = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Share> shares = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY)
-    private List<Post> replies = new ArrayList<>();
-
-
-    public List<Like> getLikes() {
-        if (likes == null)
-            likes = new ArrayList<>();
-        return likes;
-    }
-
     public void addReply(Post reply) {
-        replies.add(reply);
+        if (comments == null)
+            comments = new ArrayList<>();
+        comments.add(reply);
         reply.setParent(this);
     }
 
@@ -74,7 +66,7 @@ public class Post {
     }
 
     public void addLike(Like like) {
-        if(likes == null)
+        if (likes == null)
             likes = new ArrayList<>();
         likes.add(like);
     }

@@ -2,9 +2,11 @@ package advanced.algorithms.programming.tailoredsocialnetwork.service;
 
 import advanced.algorithms.programming.tailoredsocialnetwork.dto.post.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.User;
+import advanced.algorithms.programming.tailoredsocialnetwork.entity.View;
 import advanced.algorithms.programming.tailoredsocialnetwork.entity.enumeration.*;
 import advanced.algorithms.programming.tailoredsocialnetwork.repository.PostRepository;
 import advanced.algorithms.programming.tailoredsocialnetwork.repository.UserRepository;
+import advanced.algorithms.programming.tailoredsocialnetwork.repository.ViewRepository;
 import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.NotFoundException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +32,16 @@ class PostServiceTests {
     @Autowired
     private PostService postService;
 
+    @Autowired
+    private ViewRepository viewRepository;
+
     private static User user;
 
     @BeforeAll
     static void setUp(@Autowired UserRepository userRepository) {
         user = new User();
         user.setUsername("Testing");
-        user.setEmail("test6@example.com");
+        user.setEmail("test15@example.com");
         user.setPassword("password");
         user.setFirstname("Test");
         user.setLastname("User");
@@ -190,4 +195,27 @@ class PostServiceTests {
 
         assertEquals(2, userPosts.size());
     }
+
+    @Test
+    void recordPostView_WithValidInput_ShouldRecordView() {
+        // Create a post
+        PostDTO postDTO = new PostDTO("Test content", "test.jpg", Instant.now(), Visibility.PUBLIC, user.getUsername());
+        PostDTO createdPost = postService.createPost(postDTO, user.getEmail());
+
+        // Record a view
+        ViewDTO viewDTO = postService.recordPostView(createdPost.getId(), user.getEmail());
+
+        // Check if the view was recorded successfully
+        assertNotNull(viewDTO);
+        assertEquals(createdPost.getId(), viewDTO.getPostId());
+        assertEquals(user.getEmail(), viewDTO.getEmail());
+
+        // Retrieve the views for the post
+        List<View> views = viewRepository.findAllByPostId(createdPost.getId());
+
+        // Check if the view was recorded in the repository
+        assertEquals(1, views.size());
+        assertEquals(user.getEmail(), views.get(0).getUser().getEmail());
+    }
+
 }

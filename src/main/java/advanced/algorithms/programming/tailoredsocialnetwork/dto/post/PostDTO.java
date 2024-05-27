@@ -38,6 +38,7 @@ public class PostDTO {
 
     private long likeCount;
     private List<String> likedBy;
+    private List<String> viewedBy;
 
     @JsonCreator
     public PostDTO(String content, String picture, Instant createdAt, Visibility visibility, String username) {
@@ -49,7 +50,7 @@ public class PostDTO {
     }
 
     @JsonCreator
-    public PostDTO(int id, String content, String picture, Instant createdAt, Visibility visibility, String username, long likeCount, List<String> likedBy) {
+    public PostDTO(int id, String content, String picture, Instant createdAt, Visibility visibility, String username, long likeCount, List<String> likedBy, List<String> viewedBy) {
         this.id = id;
         this.content = content;
         this.picture = picture;
@@ -58,6 +59,7 @@ public class PostDTO {
         this.username = username;
         this.likeCount = likeCount;
         this.likedBy = likedBy;
+        this.viewedBy = viewedBy;
     }
 
 }
