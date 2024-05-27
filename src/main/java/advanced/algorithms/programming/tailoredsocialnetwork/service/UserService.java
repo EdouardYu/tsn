@@ -14,6 +14,7 @@ import advanced.algorithms.programming.tailoredsocialnetwork.service.exception.*
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -355,6 +356,12 @@ public class UserService implements UserDetailsService {
             throw new UsernameNotFoundException("Fiend is not found");
 
         return this.relationshipRepository.existsByUserIdAndFriendId(userId, friendId);
+    }
+
+    public List<UserDTO> searchUsers(String term) {
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        List<User> users = this.userRepository.searchUsers(term, pageRequest);
+        return users.stream().map(UserMapper::toUserDTO).toList();
     }
 
     public Page<UserDTO> getRecommendedProfiles(List<SearchCriteria> criteria, Pageable pageable) {

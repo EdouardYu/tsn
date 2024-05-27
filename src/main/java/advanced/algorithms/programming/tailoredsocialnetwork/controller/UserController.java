@@ -133,6 +133,12 @@ public class UserController {
     }
 
     @ResponseStatus(value = HttpStatus.OK)
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<UserDTO> searchUsers(@RequestParam String term) {
+        return this.userService.searchUsers(term);
+    }
+
+    @ResponseStatus(value = HttpStatus.OK)
     @GetMapping(path = "profiles", produces = MediaType.APPLICATION_JSON_VALUE)
     public Page<UserDTO> getRecommendedProfiles(@RequestBody List<SearchCriteria> criteria, Pageable pageable) {
         return this.userService.getRecommendedProfiles(criteria, pageable);
