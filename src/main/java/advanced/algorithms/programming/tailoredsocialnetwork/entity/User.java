@@ -53,12 +53,6 @@ public class User implements UserDetails {
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
     private List<Interest> interests = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user", orphanRemoval = true)
-    private List<Relationship> friends = new ArrayList<>();
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-    private List<Like> likedPosts = new ArrayList<>();
-
     @Enumerated(EnumType.STRING)
     private Visibility visibility = Visibility.FRIENDS_ONLY;
 

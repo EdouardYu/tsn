@@ -166,5 +166,12 @@ public class UserController {
 
         return allEnums;
     }
+
+    @GetMapping("/{userId}/friends/potential")
+    public Page<Object> getPotentialFriends(@PathVariable int userId, Pageable pageable) {
+
+
+        return this.userService.findNewFriends(userId, pageable);
+    }
 }
 

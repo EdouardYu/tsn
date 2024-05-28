@@ -394,6 +394,12 @@ public class UserService implements UserDetailsService {
         return enumMap;
     }
 
+    public Page<Object> findNewFriends(int userId, Pageable pageable) {
+        hasPermission(userId);
+
+        return this.userRepository.findNewFriends(userId, pageable);
+    }
+
     @Override
     public User loadUserByUsername(String username) {
         return this.userRepository.findByEmail(username)
